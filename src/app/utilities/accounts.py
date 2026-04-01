@@ -5,14 +5,12 @@
 # ===== IMPORTS =====
 import os
 import base64
-import json
 import hashlib
 import secrets
 from dotenv import load_dotenv
 from ..models import (
     AccountPublic,
     AccountInternal,
-    AccountStatus,
     CreateAccount,
     AccountPassword
 )
