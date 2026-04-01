@@ -1,15 +1,20 @@
 ---
 name: Backlog/Tasks
-about: Describe this issue template's purpose here.
-title: "[TODO] Task Name"
-labels: production
+about: Create items that need to be completed for the project.
+title: "[TODO] Title"
+labels: production, triage needed
 assignees: aptfury
 
 ---
 
-**Area:** General/Utilities/Services/Controllers/Models/Docs
+**Description:**
 
-**Description:** Explain what this is meant to accomplish
+Explain what this is meant to accomplish
 
-**Why is this necessary?**
-Explain why this is something that should be focused on to help understand how to prioritize it.
+**Definition of Done:**
+
+Minimum requirements needed to be considered done.
+
+**Prerequisites:**
+
+Add the list of prerequisites needed before this task can be completed.
