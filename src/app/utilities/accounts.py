@@ -5,14 +5,13 @@
 # ===== IMPORTS =====
 import os
 import base64
-import json
 import hashlib
 import secrets
+from . import AuthUtilities
 from dotenv import load_dotenv
 from ..models import (
     AccountPublic,
     AccountInternal,
-    AccountStatus,
     CreateAccount,
     AccountPassword
 )
@@ -25,47 +24,26 @@ load_dotenv()
 class AccountsUtilities:
     def __init__(self):
         self.service = AccountsService()
+        self.auth = AuthUtilities()
         self.pepper = os.getenv("ACCOUNT_PEPPER")
 
-    def create_new_account(self, data: CreateAccount):
-        # todo - turn salt into its own function
-        # todo - move password creation to authorization.py
-        random_bytes: bytes = secrets.token_bytes(32)
-        salt: str = base64.b64encode(random_bytes).decode('utf-8')
+    def create_new_account(self, data: CreateAccount) -> bool:
+        '''
+        Creates a new account for the user.
 
-        # todo - update docs to gen pepper w/ python -c "import secrets; print(secrets.token_urlsafe(32))"
-        # todo - walkthrough adding to environmental variables
+        :param data:
+        :return:
+        '''
 
-        if not self.pepper:
-            raise ValueError('ACCOUNT_PEPPER not set in environment')
+        # hash user password
+        hashed_password: AccountPassword = self.auth.new_account_password(data.password)
 
-        peppered_password: str = data.password + self.pepper
-        password_bytes: bytes = peppered_password.encode('utf-8')
-        salt_bytes: bytes = salt.encode('utf-8')
-
-        hashed_password_bytes: bytes = hashlib.pbkdf2_hmac(
-            'sha256',
-            password_bytes,
-            salt_bytes,
-            600000
-        )
-        hashed_password: str = base64.b64encode(hashed_password_bytes).decode('utf-8')
-
-        account_password: AccountPassword = AccountPassword(
-            salt=salt,
-            hash=hashed_password
-        )
-
+        # create account model
         new_account: AccountInternal = AccountInternal(
             username=data.username,
             pii_email=data.email,
-            hashed_password=account_password
+            hashed_password=hashed_password
         )
 
-        public_account: AccountPublic = AccountPublic(
-            username=new_account.username,
-            pii_email = new_account.email,
-            created_on = new_account.created_on
-        )
-
-        return public_account
+        # create new account
+        return self.service.create_new_account(new_account)
