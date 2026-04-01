@@ -4,40 +4,57 @@
 
 # ===== IMPORTS =====
 
-import sys
-from enum import Enum
+from . import AccountsController
 from input_with_timeout import input_with_timeout
-from ..models import CreateAccount
-from ..utilities import AccountsUtilities
-from ..utilities import introduction, main_menu, exit_program
-from ..utilities import account_menu, welcome_authenticated_user, back_to_main_menu
-
 
 # ===== CONTROLLER =====
 
 class AppController:
     def __init__(self):
-        pass
+        self.accounts: AccountsController = AccountsController()
+        self.app_name: str = 'Indie Password Vault' # working title because no creative juices
+        self.version: str = 'v.0.0.1'
+        self.menu_options: dict = {
+            1: 'log in',
+            2: 'register account',
+            3: 'help',
+            4: 'exit',
+            "invalid_input": "invalid"
+        }
 
-    @staticmethod
-    def main_menu() -> int:
-        print(main_menu)
+    def introduction(self) -> None:
+        print(f'''====== {self.app_name} {self.version} ======
 
-        options: list[int] = [1, 2, 3, 4]
-        user_selection: int = int(input_with_timeout(
-            '''Your selection must be in the form of a number (e.g., 3).
-            All other inputs will be considered invalid.
-            
-            Enter your selection: ''',
+Hello! Welcome to {self.app_name}!
+''')
+
+    def main_menu(self, first_time: bool) -> str:
+        if first_time:
+            self.introduction()
+
+        print('''Choose an option from the menu below:
+    (1) Log In
+    (2) Register Account
+    (3) Help
+    (4) Exit
+''')
+
+        user_selection: int = int(input_with_timeout('''
+        Your selection must be in the form of a number (e.g., 3).
+        All other inputs will be considered invalid.
+        
+        Enter your selection:
+        ''',
             timeout=10
         ))
 
-        if user_selection in options:
-            return user_selection
+        if user_selection in self.menu_options.keys():
+            return self.menu_options[user_selection]
         else:
-            return 0
+            return self.menu_options['invalid_input']
 
-    @staticmethod
-    def exit_program(self) -> None:
-        print(exit_program)
-        sys.exit()
+    def account_handler(self, data):
+        pass
+
+    def vault_handler(self, option: str):
+        pass

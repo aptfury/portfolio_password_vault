@@ -15,6 +15,8 @@ class AccountsController:
     def __init__(self):
         self.account_utils = AccountsUtilities()
 
+    # todo - make nav to parse data and call methods
+
     def log_in(self):
         pass
 
