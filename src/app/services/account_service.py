@@ -137,29 +137,22 @@ class AccountService:
 
         return self.__fetch_accounts()
 
-    # todo - expand based on email and id
-    def remove_account_by_username(self, username: str) -> None:
-        '''
-        Removes an account by its username.
 
-        :param username:
+    def remove(self, account: AccountInternal) -> bool | None:
+        '''
+        Removes an account by a query.
+
+        :param account:
         :return:
         '''
 
-        if self.valid_path:
-            # load data
-            with open(self.file_path, 'r') as file:
-                data = json.load(file)
+        if not self.valid_path:
+            return None
 
-            user_account: AccountInternal | None = None
-            accounts: list[AccountInternal] = [AccountInternal.model_validate(account) for account in data]
+        accounts: list[AccountInternal] = self.__fetch_accounts()
 
-            for account in accounts:
-                if account.username.lower() == username.lower():
-                    user_account = account
+        accounts.remove(account)
 
-            data.remove(user_account.model_dump(mode='json')) # remove user from data
+        self.__save(self.file_path, accounts)
 
-            # save data
-            with open(self.file_path, 'w') as file:
-                json.dump(data, file, indent=4)
+        return True
