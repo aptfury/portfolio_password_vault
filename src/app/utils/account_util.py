@@ -108,7 +108,7 @@ class AccountUtil:
                 return None
 
         if not is_admin:
-            if getattr(user, field).lower == search.lower() and not all_matches:
+            if getattr(user, field).lower() == search.lower() and not all_matches:
                 account: AccountInternal = self.service.query_user(field, search)
 
                 # double check that it's their account
