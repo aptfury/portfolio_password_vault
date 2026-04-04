@@ -10,9 +10,9 @@ from pathlib import Path
 # ===== SERVICES =====
 
 class StorageService:
-    def __init__(self, folder: str, filename: str):
-        self.folder = folder
-        self.filename = filename
+    def __init__(self, directory: str, filename: str):
+        self.directory = directory
+        self.filename = filename if filename.endswith('.json') else f'{filename}.json'
 
     def construct_path(self) -> Path:
         '''
@@ -23,10 +23,12 @@ class StorageService:
         :return:
         '''
 
-        if not self.filename.endswith('.json'):
-            self.filename += '.json'
+        this_file: Path = Path(__file__).resolve() # resolve location of this file
+        src_dir: Path = this_file.parent.parent.parent # move up 3 levels to src
+        storage_dir: Path = src_dir / self.directory # ensure chosen folder is used
+        full_path: Path = storage_dir / self.filename # ensure chose file is used.
 
-        return Path(f'../../{self.folder}/{self.filename}')  # define and return the appropriate path
+        return full_path
 
     def create_if_missing(self) -> bool:
         '''
