@@ -4,12 +4,12 @@
 
 # ===== IMPORTS =====
 
-from .accounts import AccountsController
+from .account_controller import AccountsController
 from input_with_timeout import input_with_timeout
 
 # ===== CONTROLLER =====
 
-class AppController:
+class MainController:
     def __init__(self):
         self.accounts: AccountsController = AccountsController()
         self.app_name: str = 'Indie Password Vault' # working title because no creative juices

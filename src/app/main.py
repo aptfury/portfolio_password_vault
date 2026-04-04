@@ -13,12 +13,12 @@ TODO - create documentation
 
 import getpass
 from sys import exit
-from .controllers import AppController
+from .controllers import MainController
 from .controllers import AccountsController
 from .models import AccountPublic, AccountInternal
 
 def main():
-    program: AppController = AppController()
+    program: MainController = MainController()
     accounts: AccountsController = AccountsController()
 
     # ===============================

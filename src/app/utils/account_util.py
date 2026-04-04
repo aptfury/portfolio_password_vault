@@ -7,7 +7,7 @@ import os
 import base64
 import hashlib
 import secrets
-from .authorization import AuthUtilities
+from .auth_util import AuthUtilities
 from dotenv import load_dotenv
 from ..models import (
     AccountPublic,
@@ -22,7 +22,7 @@ from ..services import AccountService, StorageService
 load_dotenv()
 account_storage: StorageService = StorageService('data', 'accounts.json')
 
-class AccountsUtilities:
+class AccountUtils:
     def __init__(self):
         self.service = AccountService(storage=account_storage)
         self.auth = AuthUtilities()

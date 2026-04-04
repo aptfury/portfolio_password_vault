@@ -1,14 +1,14 @@
 from app.models import *
 
-def test_create(account_service, account_factory):
+def test_create(account_service, service_account_factory):
     for _ in range(5):
-        user = account_factory()
+        user = service_account_factory()
         created = account_service.create(user)
         assert created and created is not None
 
-def test_query_user(account_service, account_factory):
+def test_query_user(account_service, service_account_factory):
     for _ in range(5):
-        user = account_factory()
+        user = service_account_factory()
 
         created = account_service.create(user)
         assert created and created is not None
@@ -19,8 +19,8 @@ def test_query_user(account_service, account_factory):
         query_email = account_service.query_user('pii_email', user.pii_email)
         assert query_email == user
 
-def test_query_users(account_service, account_factory):
-    created_users: list[AccountInternal] = [account_factory(username='jonah') for _ in range(5)]
+def test_query_users(account_service, service_account_factory):
+    created_users: list[AccountInternal] = [service_account_factory(username='jonah') for _ in range(5)]
     assert [isinstance(user, AccountInternal) for user in created_users]
     assert len(created_users) == 5
 
@@ -31,8 +31,8 @@ def test_query_users(account_service, account_factory):
     users: list[AccountInternal] = [account_service.query_users('username', user.username) for user in created_users]
     assert len(users) == len(created_users)
 
-def test_get_user_id(account_service, account_factory):
-    user: AccountInternal = account_factory()
+def test_get_user_id(account_service, service_account_factory):
+    user: AccountInternal = service_account_factory()
     account_service.create(user)
 
     user_id: str = account_service.get_user_id('username', user.username)
@@ -40,13 +40,13 @@ def test_get_user_id(account_service, account_factory):
     assert isinstance(user_id, str)
     assert user_id == user.id
 
-def test_update(account_service, account_factory):
-    user: AccountInternal = account_factory(username='nonametester')
+def test_update(account_service, service_account_factory):
+    user: AccountInternal = service_account_factory(username='nonametester')
 
     created = account_service.create(user)
     assert created and created is not None
 
-    changes: AccountInternal = account_factory()
+    changes: AccountInternal = service_account_factory()
     changes.id = user.id
     assert changes.username != user.username
     assert changes.pii_email != user.pii_email
@@ -67,20 +67,20 @@ def test_update(account_service, account_factory):
     duplicate_users = account_service.query_users('id', user.id)
     assert len(duplicate_users) == 1
 
-def test_get_all(account_service, account_factory):
+def test_get_all(account_service, service_account_factory):
     for _ in range(15):
-        user = account_factory()
+        user = service_account_factory()
         account_service.create(user)
 
     all_users: list[AccountInternal] = account_service.get_all()
     assert all_users is not None
     assert len(all_users) == 15
 
-def test_remove(account_service, account_factory):
+def test_remove(account_service, service_account_factory):
     users: list[str] = []
 
     for _ in range(5):
-        user = account_factory()
+        user = service_account_factory()
         account_service.create(user)
         users.append(user.id)
 

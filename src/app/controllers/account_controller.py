@@ -7,13 +7,13 @@
 import getpass
 from input_with_timeout import input_with_timeout
 from ..models import CreateAccount, AccountPublic, AccountInternal
-from ..utilities import AccountsUtilities
+from ..utils import AccountUtils
 
 # ===== CONTROLLER =====
 
 class AccountsController:
     def __init__(self):
-        self.account_utils = AccountsUtilities()
+        self.account_utils = AccountUtils()
 
     # todo - make nav to parse data and call methods
 
