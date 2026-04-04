@@ -45,7 +45,7 @@ def account_service(storage):
 
 @pytest.fixture
 def account_util(account_service):
-    utils = AccountUtils()
+    utils = AccountUtil()
     utils.service = account_service
 
 # ============================
@@ -86,11 +86,13 @@ def util_account_factory():
     fake = Faker()
 
     def _new_user(username: str | None = None, password: str | None = None):
-        new_user = CreateAccount(
+        return CreateAccount(
             username=username or fake.user_name(),
             email=fake.ascii_free_email(),
             password=password or fake.password()
         )
+
+    return _new_user
 
 @pytest.fixture
 def hashed_password_factory(pepper_factory, salt_factory):

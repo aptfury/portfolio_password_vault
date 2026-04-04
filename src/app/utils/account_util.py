@@ -4,9 +4,6 @@
 
 # ===== IMPORTS =====
 import os
-import base64
-import hashlib
-import secrets
 from .auth_util import AuthUtilities
 from dotenv import load_dotenv
 from ..models import (
@@ -22,13 +19,13 @@ from ..services import AccountService, StorageService
 load_dotenv()
 account_storage: StorageService = StorageService('data', 'accounts.json')
 
-class AccountUtils:
+class AccountUtil:
     def __init__(self):
         self.service = AccountService(storage=account_storage)
         self.auth = AuthUtilities()
         self.pepper = os.getenv("ACCOUNT_PEPPER")
 
-    def create_new_account(self, data: CreateAccount) -> bool:
+    def create(self, data: CreateAccount) -> bool:
         '''
         Creates a new account for the user.
 
@@ -47,4 +44,5 @@ class AccountUtils:
         )
 
         # create new account
-        return self.service.create_new_account(new_account)
+        return self.service.create(new_account)
+

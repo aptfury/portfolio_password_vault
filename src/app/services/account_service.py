@@ -83,32 +83,6 @@ class AccountService:
 
         return None # no user found
 
-    def query_users(self, field: str, search: str) -> list[AccountInternal] | None:
-        '''
-        Finds a list of accounts based on query
-
-        :param field:
-        :param search:
-        :param limit:
-        :return:
-        '''
-
-        if not self.valid_path:
-            return None
-
-        accounts: list[AccountInternal] = self.__fetch_accounts()
-
-        if len(accounts) == 0:
-            return None
-
-        users: list[AccountInternal] = []
-
-        for account in accounts:
-            if search.lower() == getattr(account, field).lower():
-                users.append(account)
-
-        return users
-
     def get_user_id(self, field: str, search: str) -> str | None:
         if not self.valid_path:
             return None
