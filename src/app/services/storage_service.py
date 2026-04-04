@@ -10,7 +10,7 @@ from pathlib import Path
 # ===== SERVICES =====
 
 class StorageService:
-    def __init__(self, directory: str, filename: str):
+    def __init__(self, directory, filename):
         self.directory = directory
         self.filename = filename if filename.endswith('.json') else f'{filename}.json'
 
