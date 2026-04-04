@@ -25,7 +25,7 @@ class AccountService:
 
         return accounts
 
-    def create(self, new_user: AccountInternal) -> list | bool | None:
+    def create(self, new_user: AccountInternal) -> bool | None:
         '''
         Creates a new account and adds it to the accounts JSON file.
 
@@ -33,24 +33,29 @@ class AccountService:
         :return:
         '''
 
-        if self.valid_path:
-            # load data
-            accounts: list[AccountInternal] = self.__fetch_accounts()
-
-            # make user the admin if they are the first account
-            if len(accounts) == 0:
-                new_user.status = AccountStatus.ADMIN
-
-            # add user to data
-            # accounts.append(new_user.model_dump(mode='json'))
-            accounts.append(new_user)
-
-            # write data
-            self.__save(self.file_path, accounts)
-
-            return True
-        else:
+        if not self.valid_path:
             return None
+
+        # load data
+        accounts: list[AccountInternal] = self.__fetch_accounts()
+
+        # make user the admin if they are the first account
+        if len(accounts) == 0:
+            new_user.status = AccountStatus.ADMIN
+
+        for user in accounts:
+            if new_user.username == user.username:
+                print('Username taken, please register again to pick a new one.')
+                return False
+
+        # add user to data
+        # accounts.append(new_user.model_dump(mode='json'))
+        accounts.append(new_user)
+
+        # write data
+        self.__save(self.file_path, accounts)
+
+        return True
 
     def query_user(self, field: str, search: str) -> AccountInternal | None:
         '''
@@ -103,6 +108,14 @@ class AccountService:
                 users.append(account)
 
         return users
+
+    def get_user_id(self, field: str, search: str) -> str | None:
+        if not self.valid_path:
+            return None
+
+        user: AccountInternal = self.query_user(field, search)
+
+        return user.id
 
     def update(self, field: str, search: str, update: AccountInternal) -> bool:
         '''

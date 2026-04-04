@@ -31,6 +31,15 @@ def test_query_users(account_service, account_factory):
     users: list[AccountInternal] = [account_service.query_users('username', user.username) for user in created_users]
     assert len(users) == len(created_users)
 
+def test_get_user_id(account_service, account_factory):
+    user: AccountInternal = account_factory()
+    account_service.create(user)
+
+    user_id: str = account_service.get_user_id('username', user.username)
+
+    assert isinstance(user_id, str)
+    assert user_id == user.id
+
 def test_update(account_service, account_factory):
     user: AccountInternal = account_factory(username='nonametester')
 
@@ -66,3 +75,23 @@ def test_get_all(account_service, account_factory):
     all_users: list[AccountInternal] = account_service.get_all()
     assert all_users is not None
     assert len(all_users) == 15
+
+def test_remove(account_service, account_factory):
+    users: list[str] = []
+
+    for _ in range(5):
+        user = account_factory()
+        account_service.create(user)
+        users.append(user.id)
+
+    user: AccountInternal = account_service.query_user('id', users[3])
+    assert user is not None
+
+    removed = account_service.remove(user)
+    assert removed and removed is not None
+
+    all_users = account_service.get_all()
+    assert len(all_users) == 4
+
+    verify_delete: AccountInternal = account_service.query_user('id', users[3])
+    assert not verify_delete or verify_delete is None
