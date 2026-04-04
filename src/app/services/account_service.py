@@ -131,7 +131,7 @@ class AccountService:
 
         return True
 
-    def all_users(self) -> list[AccountInternal] | None:
+    def get_all(self) -> list[AccountInternal] | None:
         if not self.valid_path:
             return None
 

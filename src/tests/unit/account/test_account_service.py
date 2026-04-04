@@ -57,3 +57,12 @@ def test_update(account_service, account_factory):
 
     duplicate_users = account_service.query_users('id', user.id)
     assert len(duplicate_users) == 1
+
+def test_get_all(account_service, account_factory):
+    for _ in range(15):
+        user = account_factory()
+        account_service.create(user)
+
+    all_users: list[AccountInternal] = account_service.get_all()
+    assert all_users is not None
+    assert len(all_users) == 15
