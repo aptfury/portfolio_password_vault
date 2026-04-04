@@ -15,15 +15,16 @@ from ..models import (
     CreateAccount,
     AccountPassword
 )
-from ..services import AccountService
+from ..services import AccountService, StorageService
 
 # ===== UTILITIES =====
 
 load_dotenv()
+account_storage: StorageService = StorageService('data', 'accounts.json')
 
 class AccountsUtilities:
     def __init__(self):
-        self.service = AccountService()
+        self.service = AccountService(storage=account_storage)
         self.auth = AuthUtilities()
         self.pepper = os.getenv("ACCOUNT_PEPPER")
 

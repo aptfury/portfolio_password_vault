@@ -12,8 +12,8 @@ from ..services import StorageService
 # ===== SERVICES =====
 
 class AccountService:
-    def __init__(self):
-        self.service = StorageService('vault', 'accounts')
+    def __init__(self, storage: StorageService):
+        self.service = storage
         self.file_path = self.service.construct_path()
         self.valid_path = self.service.create_if_missing()
 
