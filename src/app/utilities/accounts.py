@@ -46,4 +46,4 @@ class AccountsUtilities:
         )
 
         # create new account
-        return self.service.create_new_account(new_account)
+        return self.service.create(new_account)

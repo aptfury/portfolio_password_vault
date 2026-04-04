@@ -3,14 +3,15 @@
 # Description: Manages account access and data maintenance.
 
 # ===== IMPORTS =====
-import json
-from ..models import AccountInternal, AccountPublic, AccountStatus, CreateAccount
+from ..models import AccountInternal
+from ..models import AccountPublic
+from ..models import AccountStatus
 from ..services import FileManagementService
 # ===================
 
 class AccountServices:
     def __init__(self):
-        self.service = FileManagementService('vault', 'accounts')
+        self.service = FileManagementService('data', 'accounts')
         self.file_path = self.service.construct_path()
         self.valid_path = self.service.create_if_missing()
         self.__load = self.service.read_file
@@ -20,9 +21,9 @@ class AccountServices:
         data = self.__load(self.file_path)
         return [AccountInternal.model_validate(acc) for acc in data]
 
-    def create_new_account(self, new_user: AccountInternal) -> bool | None:
+    def create(self, new_user: AccountInternal) -> bool | None:
         '''
-        Creates a new account and adds it to the database.
+        Creates user account.
 
         :param new_user:
         :return:
@@ -49,22 +50,15 @@ class AccountServices:
         else:
             return None
 
-    def update_account(self, status: AccountStatus, username: str, update: CreateAccount | AccountInternal) -> bool | None:
+    def update(self, field: str, search: str, data: AccountInternal) -> bool | None:
         '''
-        Allows updating of user accounts. Admins can update various accounts, while users can
-        only update their own accounts.
+        Updates user accounts
 
-        :param status:
-        :param username:
-        :param update:
+        :param field:
+        :param search:
+        :param data:
         :return:
         '''
-
-        if status == AccountStatus.BANNED or status == AccountStatus.ON_HOLD:
-            print('----- PERMISSION DENIED -----\n'
-                  f'You cannot change your account because it is {status}.\n'
-                  'If you believe this was an error, please reach out to the administrator.')
-            return False # todo - add an access denied response that tells the application to exit
 
         if self.valid_path:
             accounts: list[AccountInternal] = self.__fetch_accounts()
@@ -73,23 +67,8 @@ class AccountServices:
                 return None
 
             for i, user in enumerate(accounts):
-                if user.username.lower() == username.lower():
-                    if status == AccountStatus.ADMIN:
-                        accounts[i] = update
-                        break
-
-                    elif status == AccountStatus.USER:
-                        if update.username:
-                            accounts[i].username = update.username
-
-                        if update.email:
-                            accounts[i].pii_email = update.email
-
-                        break
-
-                    else:
-                        print('ERROR: Only users and admin can edit accounts')
-                        return None
+                if getattr(user, field).lower() == search.lower():
+                    accounts[i] = data
 
             self.__save(self.file_path, accounts)
 
@@ -98,19 +77,15 @@ class AccountServices:
             print('----- INVALID PATH -----')
             return False # todo - create invalid path error
 
-    def find_account_by_username(self, username: str, status: AccountStatus) -> AccountPublic | AccountInternal | None:
+    def query_user(self, field: str, search: str, is_public: bool) -> AccountInternal | AccountPublic | None:
         '''
-        Finds an account by its username and returns an internal view for admins
-        and a public view for users.
+        Returns first user account found based on query
 
-        :param username:
-        :param status:
+        :param field:
+        :param search:
+        :param is_public:
         :return:
         '''
-
-        # ensure accounts with restricted access permissions are automatically denied
-        if status == AccountStatus.BANNED or status == AccountStatus.ON_HOLD:
-            return None # todo - Create access rejection error msg
 
         if self.valid_path:
             # load data
@@ -120,48 +95,60 @@ class AccountServices:
                 return None
 
             for user in accounts:
-                if username.lower() == user.username.lower():
-                    if status == AccountStatus.ADMIN:
-                        return user
-
-                    elif status == AccountStatus.USER:
+                if search.lower() == getattr(user, field).lower():
+                    if is_public:
                         return AccountPublic.model_construct(**user.model_dump())
-
                     else:
-                        return None
+                        return user
 
             return None
         else:
             return None
 
-    def internal_find_all_users(self, status: AccountStatus) -> list[AccountInternal] | None:
+    def query_users(self, field: str, search: str) -> list[AccountInternal] | None:
         '''
-        Returns a list of all registered users.
+        Returns a list of users based on query
 
-        :param status:
+        :param field:
+        :param search:
         :return:
         '''
 
-        if status != AccountStatus.ADMIN:
-            return None # todo - replace with access error
+        if self.valid_path:
+            accounts: list[AccountInternal] = self.__fetch_accounts()
 
+            if len(accounts) == 0:
+                return None
+
+            users: list[AccountInternal] = []
+
+            for user in accounts:
+                if search.lower() == getattr(user, field):
+                    users.append(user)
+
+            return users
+        else:
+            return None
+
+    def list(self) -> list[AccountInternal] | None:
+        '''
+        Returns all users
+
+        :return:
+        '''
         if self.valid_path:
             return self.__fetch_accounts()
         else:
             return None # todo - replace with path error
 
     # todo - expand based on email and id
-    def remove_account_by_username(self, username: str, status: AccountStatus) -> bool | None:
+    def remove(self, account: AccountInternal) -> bool | None:
         '''
-        Removes an account by its username.
+        Removes an account.
 
-        :param username:
-        :param status:
+        :param account:
         :return:
         '''
-
-        if status == AccountStatus.BANNED or status == AccountStatus.ON_HOLD:
-            return None
 
         if self.valid_path:
             # load data
@@ -170,9 +157,7 @@ class AccountServices:
             if len(accounts) == 0:
                 return None # todo - return an error for no user
 
-            for user in accounts:
-                if username.lower() == user.username.lower():
-                    accounts.remove(user)
+            accounts.remove(account)
 
             # save data
             self.__save(self.file_path, accounts)
