@@ -5,12 +5,14 @@
 # ===== IMPORTS =====
 import os
 from .auth_util import AuthUtilities
+from enum import Enum
 from dotenv import load_dotenv
 from ..models import (
     AccountPublic,
     AccountInternal,
     CreateAccount,
-    AccountPassword
+    AccountPassword,
+    AccountStatus
 )
 from ..services import AccountService, StorageService
 
@@ -18,12 +20,20 @@ from ..services import AccountService, StorageService
 
 load_dotenv()
 account_storage: StorageService = StorageService('data', 'accounts.json')
+class AcceptedFields(str, Enum):
+    id = 'id'
+    username = 'username',
+    pii_email = 'pii_email',
+    email = 'pii_email',
+    created_on = 'created_on',
+    status = 'status'
 
 class AccountUtil:
     def __init__(self):
         self.service = AccountService(storage=account_storage)
         self.auth = AuthUtilities()
         self.pepper = os.getenv("ACCOUNT_PEPPER")
+        self.fields = AcceptedFields
 
     def create(self, data: CreateAccount) -> bool:
         '''
