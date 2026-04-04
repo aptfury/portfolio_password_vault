@@ -11,7 +11,7 @@ from app.models import *
 from app.services import *
 from app.utilities import *
 from app.controllers import *
-from unittest.mock import MagicMock
+from faker import Faker
 
 # ===================
 
@@ -53,40 +53,62 @@ def mock_storage(tmp_path):
 # ===== SERVICE FIXTURES =====
 
 @pytest.fixture
-def mock_account_service(mock_storage):
-    service = AccountService(storage=mock_storage)
-
-    return service
+def account_service(storage):
+    return AccountService(storage=storage)
 
 # ============================
 
 # ===== MODEL FIXTURES =====
 
-@pytest.fixture
-def account_models():
-    create = CreateAccount(
-        username='test',
-        password='belligerent',
-        email='penelope@outmail.com',
-    )
-    password = AccountPassword(
-        salt='something_something_salt',
-        hash='something_something_hash',
-    )
-    internal = AccountInternal(
-        username='pickles and cheese',
-        pii_email='pickes@outmail.com',
-        hashed_password=password,
-    )
-    public = AccountPublic
-    status = AccountStatus
-
-    return {
-        'create': create,
-        'internal': internal,
-        'public': public,
-        'status': status,
-        'password': password
-    }
+# @pytest.fixture
+# def account_models():
+#     create = CreateAccount(
+#         username='test',
+#         password='belligerent',
+#         email='penelope@outmail.com',
+#     )
+#     password = AccountPassword(
+#         hash='hashed_shit',
+#         salt='salty-bitch',
+#         iterations=600000,
+#         algorithm='sha512',
+#     )
+#     internal = AccountInternal(
+#         username='pickles and cheese',
+#         pii_email='pickes@outmail.com',
+#         hashed_password=password,
+#     )
+#     public = AccountPublic
+#     status = AccountStatus
+#
+#     return internal
 
 # ==========================
+
+# ===== FACTORIES =====
+
+@pytest.fixture
+def account_factory():
+    fake = Faker()
+
+    def _create_user(username: str | None = None, password: str | None = None):
+        user = username or fake.user_name()
+        raw_password = password or fake.password()
+
+        password_model = AccountPassword(
+            salt=fake.sha256(),
+            hash=fake.sha256(),
+            iterations=600000,
+            algorithm='sha256'
+        )
+
+        return AccountInternal(
+            username=user,
+            pii_email=fake.ascii_free_email(),
+            hashed_password=password_model
+        )
+
+    return _create_user
+
+
+# =====================

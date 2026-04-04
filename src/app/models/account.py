@@ -23,7 +23,7 @@ class AccountBase(BaseModel):
     model_config = ConfigDict(strict=True)
 
     username: str
-    pii_email: Optional[EmailStr] = Field(default=None, exclude=True)
+    pii_email: Optional[EmailStr] = Field(default=None)
 
     @computed_field
     @property
@@ -38,10 +38,10 @@ class AccountInternal(AccountBase):
     model_config = ConfigDict(strict=True)
 
     id: str = Field(default_factory=lambda: uuid4().hex)
-    status: AccountStatus = Field(default=AccountStatus.USER)
-    hashed_password: AccountPassword = Field(exclude=True)
-    created_on: datetime = Field(default_factory=datetime.now)
-    updated_on: datetime = Field(default_factory=datetime.now)
+    status: str = Field(default=AccountStatus.USER)
+    hashed_password: AccountPassword
+    created_on: str = Field(default=str(datetime.now()))
+    updated_on: str = Field(default=str(datetime.now()))
 
 class AccountPublic(AccountBase):
     model_config = ConfigDict(strict=True)

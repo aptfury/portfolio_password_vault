@@ -80,7 +80,7 @@ class StorageService:
             self.create_if_missing()
 
         with open(file_path, 'w') as file:
-            save_data: list = [item.model_dump() for item in data]
+            save_data: list = [item.model_dump(mode='json') for item in data]
             json.dump(save_data, file, indent=4)
 
         return None
