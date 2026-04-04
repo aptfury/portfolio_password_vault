@@ -15,7 +15,7 @@ from ..models import (
     CreateAccount,
     AccountPassword
 )
-from ..services import AccountsService
+from ..services import AccountServices
 
 # ===== UTILITIES =====
 
@@ -23,7 +23,7 @@ load_dotenv()
 
 class AccountsUtilities:
     def __init__(self):
-        self.service = AccountsService()
+        self.service = AccountServices()
         self.auth = AuthUtilities()
         self.pepper = os.getenv("ACCOUNT_PEPPER")
 
@@ -46,4 +46,4 @@ class AccountsUtilities:
         )
 
         # create new account
-        return self.service.create_new_account(new_account)
+        return self.service.create(new_account)

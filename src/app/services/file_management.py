@@ -6,6 +6,7 @@
 
 import json
 from pathlib import Path
+from ..models import AccountInternal
 
 # ===== SERVICES =====
 
@@ -47,6 +48,41 @@ class FileManagementService:
                 json.dump([], file, indent=4)
 
         return file_path.exists()
+
+    def read_file(self, file_path: Path):
+        '''
+        Loads the file and returns list of AccountInternal objects.
+
+        :param file_path:
+        :return:
+        '''
+        if not file_path.exists():
+            self.create_if_missing()
+
+        with open(file_path, 'r') as file:
+            try:
+                data = json.load(file)
+            except json.decoder.JSONDecodeError:
+                data = []
+
+        return data
+
+    def save_file(self, file_path: Path, data: list) -> None:
+        '''
+        Saves data passed to the method in the correct file.
+
+        :param file_path:
+        :param data:
+        :return:
+        '''
+        if not file_path.exists():
+            self.create_if_missing()
+
+        with open(file_path, 'w') as file:
+            save_data: list = [item.model_dump() for item in data]
+            json.dump(save_data, file, indent=4)
+
+        return None
 
     def destroy_file(self) -> bool:
         '''
