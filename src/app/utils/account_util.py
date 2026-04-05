@@ -163,3 +163,33 @@ class AccountUtil:
         account: AccountInternal = self.service.query_user(field, search)
 
         return account.id
+
+    def update(self, user: AccountInternal, field: str, search: str, update: AccountInternal) -> bool | None:
+        '''
+        Updates a user's account with new information without replacing their IDs.
+
+        # todo - Make specific models for updating data to simplify process.
+
+        :param user:
+        :param field:
+        :param search:
+        :param update:
+        :return:
+        '''
+
+        if self.__access_forbidden(user.status):
+            # todo - manage error
+            return None
+
+        if not self.__is_admin(user.status):
+            if user.id == update.id:
+                response = self.service.update(field, search, update)
+                return response
+            else:
+                return None
+
+        if self.__is_admin(user.status):
+            response = self.service.update(field, search, update)
+            return response
+        else:
+            return None
