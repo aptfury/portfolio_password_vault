@@ -97,6 +97,46 @@ def util_account_factory():
     return _new_user
 
 @pytest.fixture
+def util_registered_user_factory(account_util, account_service, util_account_factory):
+    '''
+    Uses other fixtures to generate a user, create their account, and then return
+    the internal view of the account for use in test cases.
+
+    :param account_util:
+    :param account_service:
+    :param util_account_factory:
+    :return:
+    '''
+    def _registered_user(
+            username: str | None = None,
+            password: str | None = None,
+            email: str | None = None,
+            status: AccountStatus | None = None
+    ):
+        # make user
+        user = util_account_factory(username if username else None, password if password else None)
+        account_util.create(user)
+
+        # get base user before updates
+        base_user = account_service.query_user('username', user.username)
+
+        if status is None and email is None:
+            return base_user
+        else:
+            if status:
+                base_user.status = status
+            if email:
+                base_user.pii_email = email
+
+            account_service.update('username', user.username, base_user)
+            return account_service.query_user('username', user.username)
+
+
+
+
+    return _registered_user
+
+@pytest.fixture
 def hashed_password_factory(pepper_factory, salt_factory):
     '''Creates a cryptographically sound password hash'''
     fake = Faker()
