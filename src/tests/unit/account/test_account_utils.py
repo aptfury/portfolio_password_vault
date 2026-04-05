@@ -69,3 +69,20 @@ def test_query_user(account_util, util_registered_user_factory):
     assert admin_response_self == expected_admin_response_self
     assert admin_response_other == expected_admin_response_other
     assert admin_response_list == expected_admin_response_list
+
+def test_get_user_id(account_util, util_registered_user_factory):
+    admin = util_registered_user_factory(status=AccountStatus.ADMIN)
+    user = util_registered_user_factory(status=AccountStatus.USER)
+
+    assert isinstance(admin, AccountInternal)
+    assert isinstance(user, AccountInternal)
+
+    fetch_id_as_admin = account_util.get_user_id(admin, 'username', user.username)
+    fetch_id_as_user = account_util.get_user_id(user, 'username', user.username)
+
+    expected_fetch_id_as_admin = user.id
+    expected_fetch_id_as_user = None
+
+    assert isinstance(fetch_id_as_admin, str)
+    assert fetch_id_as_admin == expected_fetch_id_as_admin
+    assert fetch_id_as_user == expected_fetch_id_as_user
