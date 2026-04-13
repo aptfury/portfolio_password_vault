@@ -8,12 +8,15 @@ import getpass
 from input_with_timeout import input_with_timeout
 from ..models import CreateAccount, AccountPublic, AccountInternal
 from ..utils import AccountUtil
+from ..services import StorageService
 
 # ===== CONTROLLER =====
 
+account_storage: StorageService = StorageService('data', 'accounts.json')
+
 class AccountsController:
     def __init__(self):
-        self.account_utils = AccountUtil()
+        self.account_utils = AccountUtil(storage=account_storage)
 
     # todo - make nav to parse data and call methods
 
@@ -35,4 +38,4 @@ class AccountsController:
             password=password
         )
 
-        return self.account_utils.create_new_account(new_account)
+        return self.account_utils.create(new_account)

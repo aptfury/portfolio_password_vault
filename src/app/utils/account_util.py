@@ -19,7 +19,7 @@ from ..services import AccountService, StorageService
 # ===== UTILITIES =====
 
 load_dotenv()
-account_storage: StorageService = StorageService('data', 'accounts.json')
+# account_storage: StorageService = StorageService('data', 'accounts.json')
 
 class AcceptedFields(str, Enum):
     id = 'id'
@@ -30,8 +30,8 @@ class AcceptedFields(str, Enum):
     status = 'status'
 
 class AccountUtil:
-    def __init__(self):
-        self.service = AccountService(storage=account_storage)
+    def __init__(self, storage):
+        self.service = AccountService(storage=storage)
         self.fields = AcceptedFields
         self.__auth = AuthUtilities()
         self.__pepper = os.getenv("ACCOUNT_PEPPER")
