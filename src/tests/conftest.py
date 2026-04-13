@@ -6,10 +6,14 @@ Description: Fixtures and other configurations for unit and integration tests.
 
 # ===== IMPORTS =====
 
+import base64
+import hashlib
 import pytest
+import secrets
+import subprocess
 from app.models import *
 from app.services import *
-from app.utilities import *
+from app.utils import *
 from app.controllers import *
 from faker import Faker
 
@@ -31,23 +35,6 @@ def storage(tmp_path):
 
     return service # return storage service instance
 
-@pytest.fixture
-def mock_storage(tmp_path):
-    # directory
-    mock_path = tmp_path / 'mock_storage.json'
-
-    # create mock storage environment
-    mock = MagicMock(spec=StorageService)
-    mock_path.write_text('[]')
-
-    # defaults
-    mock.read_file.return_value = []
-    mock.construct_path.return_value = mock_path
-    mock.create_if_missing.return_value = True
-    mock.full_path = mock_path
-
-    return mock
-
 # ============================
 
 # ===== SERVICE FIXTURES =====
@@ -56,39 +43,24 @@ def mock_storage(tmp_path):
 def account_service(storage):
     return AccountService(storage=storage)
 
+@pytest.fixture
+def account_util(account_service):
+    utils = AccountUtil()
+    utils.service = account_service
+
+    return utils
+
 # ============================
 
 # ===== MODEL FIXTURES =====
-
-# @pytest.fixture
-# def account_models():
-#     create = CreateAccount(
-#         username='test',
-#         password='belligerent',
-#         email='penelope@outmail.com',
-#     )
-#     password = AccountPassword(
-#         hash='hashed_shit',
-#         salt='salty-bitch',
-#         iterations=600000,
-#         algorithm='sha512',
-#     )
-#     internal = AccountInternal(
-#         username='pickles and cheese',
-#         pii_email='pickes@outmail.com',
-#         hashed_password=password,
-#     )
-#     public = AccountPublic
-#     status = AccountStatus
-#
-#     return internal
 
 # ==========================
 
 # ===== FACTORIES =====
 
 @pytest.fixture
-def account_factory():
+def service_account_factory():
+    '''Generates fake accounts compatible with service use cases'''
     fake = Faker()
 
     def _create_user(username: str | None = None, password: str | None = None):
@@ -110,5 +82,127 @@ def account_factory():
 
     return _create_user
 
+@pytest.fixture
+def util_account_factory():
+    '''Generates fake accounts more compatible with util use cases.'''
+    fake = Faker()
+
+    def _new_user(username: str | None = None, password: str | None = None):
+        return CreateAccount(
+            username=username or fake.user_name(),
+            email=fake.ascii_free_email(),
+            password=password or fake.password()
+        )
+
+    return _new_user
+
+@pytest.fixture
+def util_registered_user_factory(account_util, account_service, util_account_factory):
+    '''
+    Uses other fixtures to generate a user, create their account, and then return
+    the internal view of the account for use in test cases.
+
+    :param account_util:
+    :param account_service:
+    :param util_account_factory:
+    :return:
+    '''
+    def _registered_user(
+            username: str | None = None,
+            password: str | None = None,
+            email: str | None = None,
+            status: AccountStatus | None = None
+    ):
+        # make user
+        user = util_account_factory(username if username else None, password if password else None)
+        account_util.create(user)
+
+        # get base user before updates
+        base_user = account_service.query_user('username', user.username)
+
+        if status is None and email is None:
+            return base_user
+        else:
+            if status:
+                base_user.status = status
+            if email:
+                base_user.pii_email = email
+
+            account_service.update('username', user.username, base_user)
+            return account_service.query_user('username', user.username)
+
+
+
+
+    return _registered_user
+
+@pytest.fixture
+def hashed_password_factory(pepper_factory, salt_factory):
+    '''Creates a cryptographically sound password hash'''
+    fake = Faker()
+
+    def _hashed_password(password: str | None = None):
+        raw_password: str = password if password is not None else fake.password()
+        pepper = pepper_factory()
+        salt_bytes = salt_factory()
+
+        peppered = raw_password + pepper
+        password_bytes = peppered.encode('utf-8')
+
+        hash_bytes: bytes = hashlib.pbkdf2_hmac(
+            'sha256',
+            password_bytes,
+            salt_bytes,
+            600000
+        )
+
+        hashed_password: str = base64.b64encode(hash_bytes).decode('utf-8')
+        salt: str = base64.b64encode(salt_bytes).decode('utf-8')
+
+        return AccountPassword(
+            hash=hashed_password,
+            salt=salt,
+            iterations=600000,
+            algorithm='PBKDF2-SHA256'
+        )
+
+    return _hashed_password
+
+@pytest.fixture
+def pepper_factory():
+    '''Generates authentic peppers for the testing suite'''
+    def _generate_pepper():
+        try:
+            result = subprocess.run(
+                ['openssl', 'rand', '-hex', '32'],
+                capture_output=True,
+                text=True,
+                check=True
+            )
+            return result.stdout.strip()
+        except (subprocess.CalledProcessError, FileNotFoundError):
+            # be sure to keep this in case openssl isn't installed
+            import secrets
+            return secrets.token_hex(32)
+
+    return _generate_pepper
+
+@pytest.fixture
+def salt_factory():
+    '''Generates salts for password, and is different from utility salts
+    which are less secure and only for debugging'''
+    def _generate_salt():
+        return secrets.token_bytes(16)
+
+    return _generate_salt
+
+@pytest.fixture
+def debugging_salt_factory():
+    '''This is specifically for debugging purposes only and is NOT
+    a secure option to use. DO NOT implement this anywhere as an actual salt.'''
+    def _debugging_salt(seed: str):
+        return hashlib.sha256(seed.encode()).hexdigest()[:32]
+
+    return _debugging_salt
 
 # =====================

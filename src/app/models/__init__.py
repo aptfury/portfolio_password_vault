@@ -1,11 +1,11 @@
-from .account import (
+from .account_model import (
     AccountInternal,
     AccountPublic,
     AccountStatus,
     CreateAccount
 )
 
-from .auth import (
+from .auth_model import (
     AccountPassword,
     CreatePassword
 )

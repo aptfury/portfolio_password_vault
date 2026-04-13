@@ -3,7 +3,7 @@
 # Description: Defines user data objects.
 
 # ===== IMPORTS =====
-from .auth import AccountPassword
+from .auth_model import AccountPassword
 from datetime import datetime
 from enum import Enum
 from pydantic import BaseModel, Field, EmailStr, computed_field

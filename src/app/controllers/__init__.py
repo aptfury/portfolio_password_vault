@@ -1,2 +1,2 @@
-from .program import AppController
-from .accounts import AccountsController
+from .main_controller import MainController
+from .account_controller import AccountsController
