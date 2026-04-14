@@ -89,6 +89,10 @@ class AccountUtil:
         self._check_access_forbidden(req)
 
         account = self.repo.read(field, value, req_id=req.id)
+
+        if not account[0]:
+            raise ValueError('Account could not be found.')
+
         return AccountPublic.model_construct(account[0].model_dump(mode='json'))
 
     def admin_search(
