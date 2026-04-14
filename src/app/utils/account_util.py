@@ -1,9 +1,8 @@
-# Name: Blake Lemarr
-# Updated: 04.13.2026
-# Description: Manages logic for account handling.
+# NAME: Blake Lemarr
+# DATE: 04.13.26
+# DESCRIPTION: Manages logic for account handling.
 
 # ========== IMPORTS ========== #
-import os
 from .auth_util import AuthUtil
 from enum import Enum
 from dotenv import load_dotenv
