@@ -4,12 +4,11 @@ UPDATE: 04.04.2026
 DESCRIPTION: Unit test cases for StorageService.
 '''
 
-# ===== IMPORTS =====
+# ========== IMPORTS ========== #
 from app.models import CreateAccount
-from app.services import StorageService
-# ===================
+from app.repositories import StorageService
 
-# Test path generation
+# ========== TEST CASES ========== #
 def test_construct_path(tmp_path):
     # create path
     target_dir = tmp_path / 'data'

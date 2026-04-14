@@ -8,8 +8,8 @@ from ..models import (
     AccountLogIn,
     AccountPassword
 )
-from . import CryptoUtil
-from ..services import AccountService
+from .crypto_util import CryptoUtil
+from ..repositories import AccountService
 
 
 # ===== UTILITIES =====

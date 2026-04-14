@@ -3,12 +3,11 @@
 # Description: Manages interactions between user and account operations
 
 # ===== IMPORTS =====
-
 import getpass
 from input_with_timeout import input_with_timeout
 from ..models import CreateAccount, AccountPublic, AccountInternal, AccountLogIn
 from ..utils import AccountUtil, AuthUtil
-from ..services import StorageService
+from ..repositories import StorageService
 
 # ===== INIT =====
 account_storage: StorageService = StorageService('data', 'accounts.json')

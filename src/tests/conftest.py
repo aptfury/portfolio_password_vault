@@ -12,7 +12,7 @@ import pytest
 import secrets
 import subprocess
 from app.models import *
-from app.services import *
+from app.repositories import *
 from app.utils import *
 from app.controllers import *
 from faker import Faker
@@ -37,18 +37,37 @@ def storage(tmp_path):
 
 # ============================
 
-# ===== SERVICE FIXTURES =====
+# ===== ACCOUNT FIXTURES =====
 
 @pytest.fixture
 def account_service(storage):
     return AccountService(storage=storage)
 
 @pytest.fixture
-def account_util(account_service):
-    utils = AccountUtil()
+def account_util(account_service, storage):
+    utils = AccountUtil(storage=storage)
     utils.service = account_service
 
     return utils
+
+@pytest.fixture
+def crypto_util(pepper_factory):
+    utils = CryptoUtil()
+    return utils
+
+@pytest.fixture
+def auth_util(account_service, storage, crypto_util):
+    utils = AuthUtil(storage=storage)
+    utils.service = account_service
+    utils.crypto_util = crypto_util
+    return utils
+
+@pytest.fixture
+def account_controller(account_util, auth_util):
+    controller = AccountsController()
+    controller.account_utils = account_util
+    controller.auth_utils = auth_util
+    return controller
 
 # ============================
 

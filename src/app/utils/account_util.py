@@ -14,7 +14,7 @@ from ..models import (
     AccountPassword,
     AccountStatus
 )
-from ..services import AccountService, StorageService
+from ..repositories import AccountService, StorageService
 
 # ===== INIT =====
 load_dotenv()
