@@ -9,14 +9,14 @@ from ..models import (
     AccountPassword
 )
 from .crypto_util import CryptoUtil
-from ..repositories import AccountService
+from ..repositories import AccountRepository
 
 
 # ===== UTILITIES =====
 class AuthUtil:
     def __init__(self, storage):
         self.crypto_util: CryptoUtil = CryptoUtil()
-        self.account_services: AccountService = AccountService(storage=storage)
+        self.account_repo: AccountRepository = AccountRepository(storage=storage)
 
     def create_user_password(self, raw_password: str) -> AccountPassword:
         '''
@@ -34,14 +34,14 @@ class AuthUtil:
         :param login:
         :return:
         '''
-        user: AccountInternal = self.account_services.read('username', login.username)
+        user: list[AccountInternal] = self.account_repo.read('username', login.username, 'INTERNAL_ADMIN')
 
-        if user is None:
+        if user[0] is None:
             return None
 
-        valid_password: bool = self.crypto_util.validate_hash(login.password, user.hashed_password)
+        valid_password: bool = self.crypto_util.validate_hash(login.password, user[0].hashed_password)
 
         if not valid_password:
             return None
 
-        return user.id
+        return user[0].id
