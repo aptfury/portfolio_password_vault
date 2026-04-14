@@ -74,6 +74,23 @@ class AccountUtil:
         # create new account
         return self.service.create(new_account)
 
+    def internal_fetch_user(self, user_id: str) -> AccountInternal | None:
+        '''
+        Internally grabs a user by their user_id as part of internal processes.
+
+        :param user_id:
+        :return:
+        '''
+
+        # get the account
+        account: AccountInternal = self.service.query_user('id', user_id)
+
+        if account is None:
+            return None
+
+        # transform account to public view and return it
+        return account
+
     def query_user(
             self,
             user: AccountInternal, # the user querying
