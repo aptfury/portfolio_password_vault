@@ -7,5 +7,6 @@ from .account_model import (
 
 from .auth_model import (
     AccountPassword,
-    CreatePassword
+    AccountLogIn,
+    AccountSalt
 )

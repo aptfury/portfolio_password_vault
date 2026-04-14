@@ -4,7 +4,7 @@
 
 # ===== IMPORTS =====
 import os
-from .auth_util import AuthUtilities
+from .auth_util import AuthUtil
 from enum import Enum
 from dotenv import load_dotenv
 from ..models import (
@@ -33,7 +33,7 @@ class AccountUtil:
     def __init__(self, storage):
         self.service = AccountService(storage=storage)
         self.fields = AcceptedFields
-        self.__auth = AuthUtilities()
+        self.__auth = AuthUtil()
         self.__pepper = os.getenv("ACCOUNT_PEPPER")
 
     def __access_forbidden(self, status: str) -> bool:

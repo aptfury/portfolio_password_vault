@@ -1,86 +1,47 @@
 # Name: Blake Lemarr
-# Updated: 04.01.2026
-# Description: Manages logic for account handling.
+# Updated: 04.13.2026
+# Description: Manages logic for authorization.
 
 # ===== IMPORTS =====
-import os
-import base64
-import hashlib
-import secrets
-from dotenv import load_dotenv
 from ..models import (
     AccountInternal,
+    AccountLogIn,
     AccountPassword
 )
+from . import CryptoUtil
+from ..services import AccountService
+
 
 # ===== UTILITIES =====
+class AuthUtil:
+    def __init__(self, storage):
+        self.crypto_util: CryptoUtil = CryptoUtil()
+        self.account_services: AccountService = AccountService(storage=storage)
 
-load_dotenv()
-
-class AuthUtilities:
-    def __init__(self):
-        self.account_pepper = os.getenv("ACCOUNT_PEPPER")
-        self.vault_pepper = os.getenv("VAULT_PEPPER")
-
-    def new_account_password(self, raw_password: str) -> AccountPassword:
+    def create_user_password(self, raw_password: str) -> AccountPassword:
         '''
-        Creates a secure password hash for the user.
+        Gets propper password data from crypto util.
 
         :param raw_password:
         :return:
         '''
+        return self.crypto_util.create_hash(raw_password)
 
-        # todo - update docs to gen pepper w/ python -c "import secrets; print(secrets.token_urlsafe(32))"
-        # todo - walkthrough adding to environmental variables
-
-        if not self.account_pepper: # check for valid pepper
-            raise ValueError('ACCOUNT_PEPPER not set in environment')
-
-        salt_bytes: bytes = secrets.token_bytes(32) # create password salt in bytes
-
-        combination: str = raw_password + self.account_pepper # combine raw_password and pepper
-        password_bytes: bytes = combination.encode('utf-8') # encode combination
-
-        # hash password and turn into string.
-        hash_bytes: bytes = hashlib.pbkdf2_hmac(
-            'sha256',
-            password_bytes,
-            salt_bytes,
-            600000
-        )
-        hashed_password: str = base64.b64encode(hash_bytes).decode('utf-8')
-
-        account_password: AccountPassword = AccountPassword(
-            salt=base64.b64encode(salt_bytes).decode('utf-8'),
-            hash=hashed_password
-        )
-
-        return account_password
-
-    def validate_account_password(self, raw_password: str, account: AccountInternal) -> bool:
+    def authorize_log_in(self, login: AccountLogIn) -> str | None:
         '''
-        Validates that the user's account password is correct.
+        Authorizes user login and returns user id if valid.
 
-        :param raw_password:
-        :param account:
+        :param login:
         :return:
         '''
+        user: AccountInternal = self.account_services.query_user('username', login.username)
 
-        if not self.account_pepper: # check for pepper
-            raise ValueError('ACCOUNT_PEPPER not set in environment')
+        if user is None:
+            return None
 
-        account_password: AccountPassword = account.hashed_password # get stored hash
+        valid_password: bool = self.crypto_util.validate_hash(login.password, user.hashed_password)
 
-        # hash submitted password using pepper and stored salt
-        combination: str = raw_password + self.account_pepper
-        password_bytes: bytes = combination.encode('utf-8')
-        salt_bytes: bytes = account_password.salt.encode('utf-8')
-        hash_bytes: bytes = hashlib.pbkdf2_hmac(
-            'sha256',
-            password_bytes,
-            salt_bytes,
-            600000
-        )
-        hashed_password: str = base64.b64encode(hash_bytes).decode('utf-8')
+        if not valid_password:
+            return None
 
-        return hashed_password == account_password.hash
+        return user.id
