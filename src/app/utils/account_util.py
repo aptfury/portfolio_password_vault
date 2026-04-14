@@ -2,7 +2,7 @@
 # Updated: 04.13.2026
 # Description: Manages logic for account handling.
 
-# ===== IMPORTS =====
+# ========== IMPORTS ========== #
 import os
 from .auth_util import AuthUtil
 from enum import Enum
@@ -14,44 +14,45 @@ from ..models import (
     AccountPassword,
     AccountStatus
 )
-from ..repositories import AccountService, StorageService
+from ..repositories import AccountRepository
 
-# ===== INIT =====
+# ========== INIT ========== #
 load_dotenv()
-# account_storage: StorageService = StorageService('data', 'accounts.json')
 
 class AcceptedFields(str, Enum):
     id = 'id'
-    username = 'username',
-    pii_email = 'pii_email',
-    email = 'pii_email',
-    created_on = 'created_on',
+    username = 'username'
+    pii_email = 'pii_email'
+    email = 'pii_email'
+    created_on = 'created_on'
     status = 'status'
 
-# ===== UTILITIES =====
+# ========== UTILITIES ========== #
 class AccountUtil:
     def __init__(self, storage):
         self.__auth = AuthUtil(storage=storage)
-        self.service = AccountService(storage=storage)
+        self.repo = AccountRepository(storage=storage)
         self.fields = AcceptedFields
 
-    def __access_forbidden(self, status: str) -> bool:
+    def _check_access_forbidden(self, user: AccountInternal) -> None:
         '''
         Used to detect accounts that are on hold or banned.
 
         :param status:
         :return:
         '''
-        return status == AccountStatus.ON_HOLD or status == AccountStatus.BANNED
 
-    def __is_admin(self, status: str) -> bool:
+        if user.status == AccountStatus.BANNED or user.status == AccountStatus.ON_HOLD:
+            raise PermissionError(f'You cannot complete this operation while your account is {user.status}.')
+
+    def _is_admin(self, user: AccountInternal) -> bool:
         '''
         Shorthand for whether the user is an administrator.
 
         :param status:
         :return:
         '''
-        return status == AccountStatus.ADMIN
+        return user.status == AccountStatus.ADMIN
 
     def create(self, data: CreateAccount) -> bool:
         '''
@@ -72,9 +73,9 @@ class AccountUtil:
         )
 
         # create new account
-        return self.service.create(new_account)
+        return self.repo.create(new_account, req_id='INTERNAL_ADMINISTRATOR')
 
-    def internal_fetch_user(self, user_id: str) -> AccountInternal | None:
+    def internal_read(self, user_id: str) -> AccountInternal | None:
         '''
         Internally grabs a user by their user_id as part of internal processes.
 
@@ -83,19 +84,19 @@ class AccountUtil:
         '''
 
         # get the account
-        account: AccountInternal = self.service.query_user('id', user_id)
+        account: list[AccountInternal] = self.repo.read('id', user_id, 'INTERNAL')
 
         if account is None:
             return None
 
         # transform account to public view and return it
-        return account
+        return account[0]
 
-    def query_user(
+    def read(
             self,
             user: AccountInternal, # the user querying
             field: AcceptedFields, # the field they are querying
-            search: str | AccountStatus, # the value they are searching for in that field
+            value: str | AccountStatus, # the value they are searching for in that field
             all_matches: bool = False # returns a list of all responses - ADMIN ONLY
     ) -> AccountInternal | AccountPublic | list[AccountInternal | AccountPublic] | None:
         '''
@@ -108,13 +109,13 @@ class AccountUtil:
 
         :param user:
         :param field:
-        :param search:
+        :param value:
         :param all_matches:
         :return:
         '''
 
-        is_admin: bool = self.__is_admin(user.status)
-        is_forbidden: bool = self.__access_forbidden(user.status)
+        is_admin: bool = self._is_admin(user.status)
+        is_forbidden: bool = self._check_access_forbidden(user.status)
 
         if is_forbidden:
             if user.status == AccountStatus.BANNED:
@@ -124,8 +125,8 @@ class AccountUtil:
                 return None
 
         if not is_admin:
-            if getattr(user, field).lower() == search.lower() and not all_matches:
-                account: AccountInternal = self.service.query_user(field, search)
+            if getattr(user, field).lower() == value.lower() and not all_matches:
+                account: list[AccountInternal] = self.repo.read(field, value, user.id)
 
                 # double check that it's their account
                 if user.id != account.id:
@@ -135,52 +136,25 @@ class AccountUtil:
                     return None
 
                 # convert to secure view
-                public_access: AccountPublic = AccountPublic.model_construct(account.model_dump(mode='json'))
+                public_access: AccountPublic = AccountPublic.model_construct(account[0].model_dump(mode='json'))
                 return public_access
 
         # double check request is coming from admin
         if is_admin:
             # check if they are requesting a list
+            accounts: list[AccountInternal] = self.repo.read(field, value, user.id)
+
             if all_matches:
-                accounts: list[AccountInternal] = self.service.get_all()
-                matches: list[AccountInternal] = list()
-
-                for account in accounts:
-                    if getattr(account, field).lower() == search.lower():
-                        matches.append(account)
-
-                return matches
+                return accounts
             else:
-                return self.service.query_user(field, search)
+                return accounts[0]
         else:
             # todo - throw error
             # todo - log error
             # todo - exit with alert to user that they should report this/open an issue
             return None
 
-    def get_user_id(self, user: AccountInternal, field: str, search: str) -> str | None:
-        '''
-        ADMIN & INTERNAL USE ONLY.
-
-        Allows admins and internal systems to retrieve a user's ID without returning the whole user account.
-
-        :param user:
-        :param field:
-        :param search:
-        :return:
-        '''
-
-        if not self.__is_admin(user.status):
-            # todo - access denied/forbidden access
-            # todo - add to security log
-            # todo - exit with message to create bug report if user has admin permissions
-            return None
-
-        account: AccountInternal = self.service.query_user(field, search)
-
-        return account.id
-
-    def update(self, user: AccountInternal, field: str, search: str, update: AccountInternal) -> bool | None:
+    def update(self, user: AccountInternal, update: AccountInternal) -> bool | None:
         '''
         Updates a user's account with new information without replacing their IDs.
 
@@ -193,26 +167,26 @@ class AccountUtil:
         :return:
         '''
 
-        if self.__access_forbidden(user.status):
+        if self._check_access_forbidden(user.status):
             # todo - manage error
             return None
 
-        if not self.__is_admin(user.status):
+        if not self._is_admin(user.status):
             if user.id == update.id:
                 if user.status != update.status:
                     return False
 
-                response = self.service.update(field, search, update)
+                response = self.repo.update(update.id, update, user.id)
                 return response
             else:
                 return None
 
-        if self.__is_admin(user.status):
+        if self._is_admin(user.status):
             # ensure admin cannot change their own status
             if user.id == update.id and user.status != update.status:
                 return False
 
-            response = self.service.update(field, search, update)
+            response = self.repo.update(update.id, update, user.id)
             return response
         else:
             return None
@@ -224,26 +198,27 @@ class AccountUtil:
         :param user:
         :return:
         '''
-        if not self.__is_admin(user.status):
+        if not self._is_admin(user.status):
             return None
 
-        return self.service.get_all()
+        return self.repo.get_all()
 
-    def remove(self, user: AccountInternal, target: AccountInternal) -> bool | None:
+    def remove(self, user: AccountInternal, reason: str, target: AccountInternal) -> bool | None:
         '''
         Removes a user account.
 
         :param user:
+        :param reason:
         :param target:
         :return:
         '''
-        if not self.__is_admin(user.status):
-            if self.__access_forbidden(user.status):
+        if not self._is_admin(user.status):
+            if self._check_access_forbidden(user.status):
                 return False
 
             if user.id == target.id:
-                return self.service.remove(target)
+                return self.repo.delete(target.id, reason, user.id)
 
             return None
 
-        return self.service.remove(target)
+        return self.repo.delete(target.id, reason, user.id)

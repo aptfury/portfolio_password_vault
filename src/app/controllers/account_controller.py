@@ -43,7 +43,7 @@ class AccountsController:
             return False
 
         # get user information
-        user: AccountInternal | None = self.account_utils.internal_fetch_user(user_id)
+        user: AccountInternal | None = self.account_utils.internal_read(user_id)
 
         # check that a user was found
         if user is None:

@@ -46,7 +46,7 @@ def account_service(storage):
 @pytest.fixture
 def account_util(account_service, storage):
     utils = AccountUtil(storage=storage)
-    utils.service = account_service
+    utils.repo = account_service
 
     return utils
 
@@ -137,7 +137,7 @@ def util_registered_user_factory(account_util, account_service, util_account_fac
         account_util.create(user)
 
         # get base user before updates
-        base_user = account_service.query_user('username', user.username)
+        base_user = account_service.read('username', user.username)
 
         if status is None and email is None:
             return base_user
@@ -148,7 +148,7 @@ def util_registered_user_factory(account_util, account_service, util_account_fac
                 base_user.pii_email = email
 
             account_service.update('username', user.username, base_user)
-            return account_service.query_user('username', user.username)
+            return account_service.read('username', user.username)
 
 
 

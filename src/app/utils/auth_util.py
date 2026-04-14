@@ -34,7 +34,7 @@ class AuthUtil:
         :param login:
         :return:
         '''
-        user: AccountInternal = self.account_services.query_user('username', login.username)
+        user: AccountInternal = self.account_services.read('username', login.username)
 
         if user is None:
             return None

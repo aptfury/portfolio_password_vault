@@ -10,7 +10,7 @@ def test_create(account_util, account_service, util_account_factory):
     created: bool = util.create(new_user)
     assert created and created is not None
 
-    account: AccountInternal = service.query_user(util.fields.username, new_user.username)
+    account: AccountInternal = service.read(util.fields.username, new_user.username)
     assert isinstance(account, AccountInternal)
     assert account.username == new_user.username
     assert account.pii_email == new_user.email
@@ -22,8 +22,8 @@ def test_query_user(account_util, util_registered_user_factory):
     banned: AccountInternal = util_registered_user_factory(status=AccountStatus.BANNED)
 
     # queries from banned users
-    banned_response_self = account_util.query_user(banned, 'username', banned.username)
-    banned_response_other = account_util.query_user(banned, 'username', admin.username)
+    banned_response_self = account_util.read(banned, 'username', banned.username)
+    banned_response_other = account_util.read(banned, 'username', admin.username)
 
     expected_banned_response_self = None
     expected_banned_response_other = None
@@ -32,8 +32,8 @@ def test_query_user(account_util, util_registered_user_factory):
     assert banned_response_other == expected_banned_response_other
 
     # queries from on_hold users
-    on_hold_response_self = account_util.query_user(on_hold, 'username', on_hold.username)
-    on_hold_response_other = account_util.query_user(on_hold, 'username', user.username)
+    on_hold_response_self = account_util.read(on_hold, 'username', on_hold.username)
+    on_hold_response_other = account_util.read(on_hold, 'username', user.username)
 
     expected_on_hold_response_self = AccountPublic.model_construct(on_hold.model_dump(mode='json'))
     expected_on_hold_response_other = None
@@ -43,8 +43,8 @@ def test_query_user(account_util, util_registered_user_factory):
     assert on_hold_response_other == expected_on_hold_response_other
 
     # queries from users
-    user_response_self = account_util.query_user(user, 'username', user.username)
-    user_response_other = account_util.query_user(user, 'username', banned.username)
+    user_response_self = account_util.read(user, 'username', user.username)
+    user_response_other = account_util.read(user, 'username', banned.username)
 
     expected_user_response_self = AccountPublic.model_construct(user.model_dump(mode='json'))
     expected_user_response_other = None
@@ -54,9 +54,9 @@ def test_query_user(account_util, util_registered_user_factory):
     assert user_response_other == expected_user_response_other
 
     # queries from admin
-    admin_response_self = account_util.query_user(admin, 'username', admin.username)
-    admin_response_other = account_util.query_user(admin, 'username', user.username)
-    admin_response_list = account_util.query_user(admin, 'pii_email', 'admin@email.com', True)
+    admin_response_self = account_util.read(admin, 'username', admin.username)
+    admin_response_other = account_util.read(admin, 'username', user.username)
+    admin_response_list = account_util.read(admin, 'pii_email', 'admin@email.com', True)
 
     expected_admin_response_self = admin
     expected_admin_response_other = user
