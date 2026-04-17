@@ -1,8 +1,37 @@
 # NAME: Blake Lemarr
-# DATE: 04.14.26
+# DATE: 04.16.26
 # DESCRIPTION: Storage test suite
 
 # ========== TEST CASES ========== #
+def test_create_storage(tmp_path, storage):
+    db = storage('db', 'test.json')
+
+    target_dir = tmp_path / 'db'
+    target_path = target_dir / 'test.json'
+
+    db.create_storage()
+
+    assert db.file_path == target_path
+    assert target_path.exists()
+    assert db.file_path.exists()
+
+def test_load_data(tmp_path, storage):
+    db = storage('db', 'test.json')
+
+    target_dir = tmp_path / 'db'
+    target_path = target_dir / 'test.json'
+
+    db.create_storage()
+
+    assert db.file_path == target_path
+    assert target_path.exists()
+    assert db.file_path.exists()
+
+    data = db.load_data()
+
+    assert data is not None
+    assert data == '[]'
+
 # Tests dynamic creation of paths and files for data storage.
 # def test_create_if_missing(tmp_path):
 #     # create path

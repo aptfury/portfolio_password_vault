@@ -1,5 +1,5 @@
 # NAME: Blake Lemarr
-# DATE: 04.14.26
+# DATE: 04.16.26
 # DESCRIPTION: Manages JSON file manipulation.
 
 # ========== IMPORTS ========== #
@@ -9,17 +9,21 @@ from typing import Any
 
 # ========== SERVICE ========== #
 class StorageService:
-    def __init__(self, directory: str, filename: str):
-        self.filename = filename if filename.endswith('.json') else f'{filename}.json'
-        self.file_path = self._construct_path(directory)
+    def __init__(self, directory: str, filename: str, test: bool):
+        self.filename: str = filename if filename.endswith('.json') else f'{filename}.json'
+        self.file_path: Path = self._construct_path(directory, test)
 
-    def _construct_path(self, directory: str) -> Path:
+    def _construct_path(self, directory: str, test: bool) -> Path:
         '''
         Moves to the root directory and builds directory.
 
         :param directory:
         :return:
         '''
+
+        if test:
+            src_dir = Path(directory)
+            return src_dir / self.filename
 
         src_dir: Path = Path(__file__).resolve().parent.parent.parent
         storage_dir: Path = src_dir / directory
@@ -32,10 +36,10 @@ class StorageService:
         :return:
         '''
 
-        self.file_path.mkdir(parents=True, exist_ok=True)
+        self.file_path.mkdir(parents=True, exist_ok=True) # create directory if missing
 
         if not self.file_path.exists():
-            with open(self.file_path, 'w', encoding='utf-8') as file:
+            with open(self.file_path, 'w', encoding='utf-8') as file: # create file if missing
                 json.dump([], file, indent=4)
 
     def load_data(self) -> list[dict[str, Any]]:
@@ -50,7 +54,14 @@ class StorageService:
 
         try:
             with open(self.file_path, 'r', encoding='utf-8') as file:
-                return json.load(file)
+                data = json.load(file)
+
+            if data is None or data == '':
+                with open(self.file_path, 'w', encoding='utf-8') as file:
+                    json.dump([], file, indent=4)
+                    return []
+
+            return data
 
         except (json.JSONDecodeError, FileNotFoundError):
             return []

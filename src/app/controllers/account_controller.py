@@ -10,7 +10,7 @@ from ..utils import AccountUtil, AuthUtil
 from ..repositories import StorageService
 
 # ===== INIT =====
-account_storage: StorageService = StorageService('data', 'accounts.json')
+account_storage: StorageService = StorageService('data', 'accounts.json', False)
 
 # ===== CONTROLLER =====
 class AccountsController:

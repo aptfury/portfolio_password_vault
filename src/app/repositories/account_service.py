@@ -6,7 +6,8 @@
 
 from datetime import datetime
 from ..models import AccountInternal, AccountPublic, AccountStatus
-from ..repositories import StorageService, IRepository
+from .storage_service import StorageService
+from .interface import IRepository
 from typing import Optional, Any
 
 # ========== REPO ========== #

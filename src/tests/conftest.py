@@ -14,9 +14,7 @@ from app.controllers import *
 # ========== STORAGE ========== #
 @pytest.fixture
 def storage(tmp_path):
-    test_dir = tmp_path / 'db' / 'test.json'
-
-    service = StorageService('db', 'test.json')
-    service.file_path = test_dir
-
-    return service
+    def _storage(directory: str, filename: str) -> StorageService:
+        service: StorageService = StorageService(f'{tmp_path}/{directory}', filename, True)
+        return service
+    return _storage
