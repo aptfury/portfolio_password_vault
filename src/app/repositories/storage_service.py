@@ -9,21 +9,17 @@ from typing import Any
 
 # ========== SERVICE ========== #
 class StorageService:
-    def __init__(self, directory: str, filename: str, test: bool):
+    def __init__(self, directory: str, filename: str):
         self.filename: str = filename if filename.endswith('.json') else f'{filename}.json'
-        self.file_path: Path = self._construct_path(directory, test)
+        self.file_path: Path = self._construct_path(directory)
 
-    def _construct_path(self, directory: str, test: bool) -> Path:
+    def _construct_path(self, directory: str) -> Path:
         '''
         Moves to the root directory and builds directory.
 
         :param directory:
         :return:
         '''
-
-        if test:
-            src_dir = Path(directory)
-            return src_dir / self.filename
 
         src_dir: Path = Path(__file__).resolve().parent.parent.parent
         storage_dir: Path = src_dir / directory
@@ -36,7 +32,7 @@ class StorageService:
         :return:
         '''
 
-        self.file_path.mkdir(parents=True, exist_ok=True) # create directory if missing
+        self.file_path.parent.mkdir(parents=True, exist_ok=True) # create directory if missing
 
         if not self.file_path.exists():
             with open(self.file_path, 'w', encoding='utf-8') as file: # create file if missing
@@ -54,14 +50,7 @@ class StorageService:
 
         try:
             with open(self.file_path, 'r', encoding='utf-8') as file:
-                data = json.load(file)
-
-            if data is None or data == '':
-                with open(self.file_path, 'w', encoding='utf-8') as file:
-                    json.dump([], file, indent=4)
-                    return []
-
-            return data
+                return json.load(file)
 
         except (json.JSONDecodeError, FileNotFoundError):
             return []

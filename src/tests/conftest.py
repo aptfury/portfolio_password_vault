@@ -1,6 +1,6 @@
-# NAME: Blake Lemarr
-# DATE: 04.14.26
-# DESCRIPTION: Configs and fixtures for pytest test suites
+# # NAME: Blake Lemarr
+# # DATE: 04.16.26
+# # DESCRIPTION: Configs and fixtures for pytest test suites
 
 # ========== IMPORTS ========== #
 import pytest
@@ -15,6 +15,10 @@ from app.controllers import *
 @pytest.fixture
 def storage(tmp_path):
     def _storage(directory: str, filename: str) -> StorageService:
-        service: StorageService = StorageService(f'{tmp_path}/{directory}', filename, True)
+        test_dir = tmp_path / directory
+        test_path = test_dir / filename
+
+        service: StorageService = StorageService(directory, filename)
+        service.file_path = test_path
         return service
     return _storage

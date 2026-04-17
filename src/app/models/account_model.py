@@ -40,8 +40,8 @@ class AccountInternal(AccountBase):
     id: str = Field(default_factory=lambda: uuid4().hex)
     status: str = Field(default=AccountStatus.USER)
     hashed_password: AccountPassword
-    created_on: str = Field(default=str(datetime.now()))
-    updated_on: str = Field(default=str(datetime.now()))
+    created_on: datetime = Field(default_factory=lambda: datetime.now())
+    updated_on: datetime = Field(default_factory=lambda: datetime.now())
 
 class AccountPublic(AccountBase):
     model_config = ConfigDict(strict=True)
