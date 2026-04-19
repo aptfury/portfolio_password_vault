@@ -141,6 +141,13 @@ class MockAccountFactory:
             status=status,
             hashed_password=hashed_password
         )
+    
+    def create_sign_up(self, username: str | None = None, password: str | None = None):
+        return CreateAccount(
+            username=username if username else fake.user_name(),
+            email=fake.email(True, 'passvault.com'),
+            password=password if password else fake.password()
+        )
 
 # ==================================================================================== #
 # ===================================== SECURITY ===================================== #
