@@ -52,6 +52,8 @@ def account_util(mock_storage):
     mocked_storage = storage_factory.build()
     util = AccountUtil(storage=mocked_storage)
 
+    return util, storage_factory
+
 # ========== SECURITY ========== #
 @pytest.fixture
 def mock_security():
