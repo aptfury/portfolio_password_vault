@@ -4,12 +4,12 @@
 
 # ========== IMPORTS ========== #
 import json
+import math
 import secrets
 import subprocess
 import hashlib
 import base64
 
-from _pytest.tmpdir import tmp_path
 from app.controllers import *
 from app.models import *
 from app.repositories import *
@@ -32,12 +32,12 @@ class MockStorageFactory:
         self.mock = MagicMock(spec=StorageService, autospec=True)
         self.mock.filename = mock_filename
 
-        self.mock.file_path = MagicMock(spec=Path, autospec=True)
-        self.mock.file_path.return_value = Path(f'C:/{mock_directory}/{mock_filename}')
-        self.mock.file_path.exists.return_values = True
+        self.mock_path = MagicMock(spec=Path, autospec=True)
+        self.mock.file_path = self.mock_path(f'C:/{mock_directory}/{mock_filename}')
+        self.mock.file_path.exists.return_value = True
 
-        self.mock.load_data.return_values = []
-        self.mock.delete_storage.return_values = True
+        self.mock.load_data.return_value = []
+        self.mock.delete_storage.return_value = True
 
         self.security = MockSecurityFactory()
         self.mock_accounts = MockAccountFactory()
@@ -46,27 +46,37 @@ class MockStorageFactory:
         '''Generates a single account with random data.'''
 
         account = self.mock_accounts.create_account()
-        self.mock.load_data.return_values.append(account)
+        self.mock.load_data.return_value.append(account)
 
-    def load_ten_mixed_accounts(self):
-        '''Generates a diverse list of accounts to return at varying permission levels.'''
+    def load_multi_mixed_accounts(self, total_accounts: int = 10):
+        '''Generates a diverse list of accounts to return at varying permission levels. Minimum of 10'''
 
-        for _ in range(2):
+        if total_accounts < 10:
+            raise ValueError('Must be a minimum of 10 accounts')
+
+        number_of_admins: int = math.floor(total_accounts / 5)
+        number_of_on_hold: int = math.floor(total_accounts / 10)
+        number_of_banned: int = math.floor(total_accounts / 10)
+        number_of_users: int = total_accounts - number_of_admins - number_of_on_hold - number_of_banned
+
+        for _ in range(number_of_admins):
             admin = self.mock_accounts.create_account(status=AccountStatus.ADMIN)
-            self.mock.load_data.return_values.append(admin)
+            self.mock.load_data.return_value.append(admin)
 
-        on_hold = self.mock_accounts.create_account(status=AccountStatus.ON_HOLD)
-        self.mock.load_data.return_values.append(on_hold)
+        for _ in range(number_of_on_hold):
+            on_hold = self.mock_accounts.create_account(status=AccountStatus.ON_HOLD)
+            self.mock.load_data.return_value.append(on_hold)
 
-        banned = self.mock_accounts.create_account(status=AccountStatus.BANNED)
-        self.mock.load_data.return_values.append(banned)
+        for _ in range(number_of_banned):
+            banned = self.mock_accounts.create_account(status=AccountStatus.BANNED)
+            self.mock.load_data.return_value.append(banned)
 
-        for _ in range(6):
+        for _ in range(number_of_users):
             user = self.mock_accounts.create_account()
-            self.mock.load_data.return_values.append(user)
+            self.mock.load_data.return_value.append(user)
 
     def delete_storage_failed(self):
-        self.mock.delete_storage.return_values = False
+        self.mock.delete_storage.return_value = False
 
     def build(self):
         return self.mock
@@ -109,39 +119,16 @@ class MockSecurityFactory:
         pass
 
     def generate_pepper(self):
-        try:
-            result = subprocess.run(
-                ['openssl', 'rand', '-hex', '32'],
-                capture_output=True,
-                text=True,
-                check=True
-            )
-            return result.stdout.strip()
-        except (subprocess.CalledProcessError, FileNotFoundError):
-            return secrets.token_hex(32)
+        return secrets.token_hex(32)
 
     def generate_salt(self):
         return secrets.token_bytes(16)
 
     def debugging_salt_pepper(self):
-        salt = secrets.token_bytes(16)
-
-        try:
-            pepper = subprocess.run(
-                ['openssl', 'rand', '-hex', '32'],
-                capture_output=True,
-                text=True,
-                check=True
-            )
-            return {
-                "salt": salt,
-                "pepper": pepper.stdout.strip()
-            }
-        except (subprocess.CalledProcessError, FileNotFoundError):
-            return {
-                "salt": salt,
-                "pepper": secrets.token_hex(32)
-            }
+        return {
+            "salt": b'Z]O\xb3\xd9\xcf\xce\xb1\x19:u#\x8e\x87\xc9\x83',
+            "pepper": 'bb74a3bc759a30c74db45ff1849902ae99fcdfe0d2a8eb3866214f37044c3998'
+        }
 
     def hashed_password(self, raw_password: str, debug_mode: bool = False):
         mock_password = MagicMock(spec=AccountPassword, autospec=True)
