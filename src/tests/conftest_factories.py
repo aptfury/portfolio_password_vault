@@ -75,8 +75,15 @@ class MockStorageFactory:
             user = self.mock_accounts.create_account()
             self.mock.load_data.return_value.append(user)
 
+    def save_accounts(self, accounts: list):
+        for account in accounts:
+            self.mock.load_data.return_value.append(account)
+
     def delete_storage_failed(self):
         self.mock.delete_storage.return_value = False
+
+    def path_construction_failed(self):
+        self.mock.file_path.exists.return_value = False
 
     def build(self):
         return self.mock
