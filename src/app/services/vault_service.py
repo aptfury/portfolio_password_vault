@@ -19,7 +19,7 @@ from ..repositories.vault_repo import VaultRepo
 from ..repositories.account_repo import AccountRepo
 
 from .auth_service import AuthService
-from ..utilities import EncryptUtils, HashUtils, IdentUtils
+from ..utilities import EncryptUtils, HashUtils, IdentUtils, NavUtils
 
 # ------------ VAULT SERVICE ------------ #
 class VaultService:
@@ -28,7 +28,8 @@ class VaultService:
         encrypt_utils: EncryptUtils,
         hash_utils: HashUtils,
         ident_utils: IdentUtils,
-        auth_service: AuthService
+        auth_service: AuthService,
+        nav_utils: NavUtils
     ):
     # ------ config ------ #
         self.repo: VaultRepo = VaultRepo()
@@ -37,6 +38,7 @@ class VaultService:
         self.hash: HashUtils = hash_utils
         self.id: IdentUtils = ident_utils
         self.auth: AuthService = auth_service
+        self.nav: NavUtils = nav_utils
         
         # ------ user session ------ #
         self.name: str = None

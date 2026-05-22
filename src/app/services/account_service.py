@@ -22,7 +22,8 @@ from ..models import (
 from ..utilities import (
     EncryptUtils,
     HashUtils,
-    IdentUtils
+    IdentUtils,
+    NavUtils
 )
 from .auth_service import AuthService
 from .vault_service import VaultService
@@ -36,7 +37,8 @@ class AccountService:
         encrypt_utils: EncryptUtils,
         hash_utils: HashUtils,
         ident_utils: IdentUtils,
-        auth_service: AuthService
+        auth_service: AuthService,
+        nav_utils: NavUtils
     ):
         # ------ config ------ #
         self.repo: AccountRepo = AccountRepo()
@@ -45,6 +47,7 @@ class AccountService:
         self.hash: HashUtils = hash_utils
         self.id: IdentUtils = ident_utils
         self.auth: AuthService = auth_service
+        self.nav: NavUtils = nav_utils
         
         # ------ user session ------ #
         self.session_id: str = None
