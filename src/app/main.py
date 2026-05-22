@@ -22,7 +22,6 @@ def main():
     hash_utils: HashUtils = HashUtils()
     ident_utils: IdentUtils = IdentUtils()
     encrypt_utils: EncryptUtils = EncryptUtils()
-    nav: NavUtils = NavUtils()
     auth_service: AuthService = AuthService(
         encrypt_utils=encrypt_utils,
         hash_utils=hash_utils,

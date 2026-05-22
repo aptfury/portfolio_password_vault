@@ -98,7 +98,7 @@ main menu > vault menu
             pass_nav = self.manage_passwords()
             
             if pass_nav == 'back':
-                self.vault_menu(name)
+                self.nav.navigate_to_account()
             elif pass_nav == 'log out':
                 return 'log out'
         elif nav_choice == 5:
