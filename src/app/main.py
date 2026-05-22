@@ -43,7 +43,7 @@ def main():
         auth_service=auth_service,
         nav_utils=nav
     )
-    nav: NavUtils = NavUtils()
+    nav: NavUtils = NavUtils(vault=vaults, account=accounts)
     
     welcome_message = '''
 ------------------------------------------
