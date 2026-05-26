@@ -2,12 +2,13 @@
 
 AUTHOR: Blake Lemarr
 CREATED: 05.22.26
-UPDATED: 05.22.26
+UPDATED: 05.26.26
 
 DESCRIPTION: The different scripts used throughout the program
 
 UPDATES:
     - [05.22.26] Created first few scripts
+    - [05.26.26] Updating template scripts
     
 DEPENDENCIES:
     - Name
@@ -96,9 +97,39 @@ class ScriptsUtil:
         return script
     
     def account_template(self, account):
-        script: list[str] = []
+        script: list[str] = [
+            '\n-----------------------------------',
+            '           ACCOUNT  INFO           ',
+            '-----------------------------------',
+            f'USERNAME: {account.username}       ',
+            f'EMAIL: {account.email}             ',
+            '-----------------------------------',
+            '              OPTIONS              ',
+            '-----------------------------------',
+            '(1) Edit                           ',
+            '(2) Delete (Permanent)             ',
+            '(3) Back                           ',
+            '-----------------------------------'
+        ]
         return script
     
-    def password_template(self, password):
-        script: list[str] = []
+    def password_template(self, password, reveal: bool = False):
+        user_pass: str = password.password if reveal else ('*' * len(password.password))
+        script: list[str] = [
+            
+            '\n-----------------------------------',
+            '           PASSWORD INFO           ',
+            '-----------------------------------',
+            f'ID: {password.id}                  ',
+            f'WEBSITE: {password.website}        ',
+            f'USERNAME: {password.username}      ',
+            f'PASSWORD: {user_pass}              ',
+            '-----------------------------------',
+            '              OPTIONS              ',
+            '-----------------------------------',
+            '(1) Edit                           ',
+            '(2) Delete                         ',
+            '(3) Back                           ',
+            '-----------------------------------'
+        ]
         return script
