@@ -133,3 +133,32 @@ class ScriptsUtil:
             '-----------------------------------'
         ]
         return script
+    
+    def password_table(self, passwords: list, reveal: bool = False):
+        id_len: int = 18
+        website_len: int = 0
+        username_len: int = 0
+        password_len: int = 0
+        
+        for pw in passwords:
+            if len(pw['website']) > website_len:
+                website_len = len(pw['website'])
+            
+            if len(pw['username']) > username_len:
+                username_len = len(pw['username'])
+                
+            if len(pw['password']) > password_len:
+                password_len = len(pw['password'])
+        
+        script: list[str] = [
+            f'--{'-' * id_len}---{'-' * website_len}---{'-' * username_len}---{'-' * password_len}--',
+            f'| ID{' ' * (id_len - len('ID'))} | WEBSITE{' ' * (website_len - len('WEBSITE'))} | USERNAME{' ' * (username_len - len('USERNAME'))} | PASSWORD{' ' * (password_len - len('PASSWORD'))} |'
+        ]
+        
+        for pw in passwords:
+            user_pw: str = pw.password if reveal else ('*' * len(pw.password))
+            script.append(f'| {pw.id}{' ' * (id_len - len(pw.id))} | {pw.website}{' ' * (website_len - len(pw.website))} | {pw.username}{' ' * (username_len - len(pw.username))} | {user_pw}{' ' * (password_len - len(user_pw))} |')
+            
+        script.append(f'--{'-' * id_len}---{'-' * website_len}---{'-' * username_len}---{'-' * password_len}--')
+        
+        return script
